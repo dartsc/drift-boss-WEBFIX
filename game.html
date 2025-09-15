@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<script>
+// Configuration
+const Fullscreen = true;
+
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Set document title dynamically
+    document.title = "Drift Boss";
+    
+    // Create and inject head elements
+    const head = document.head;
+    
+    // Favicon
+    const favicon = document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.type = 'image/x-icon';
+    favicon.href = 'https://cdn.jsdelivr.net/gh/dartsc/drift-boss@main/media/graphics/misc/favicon.ico';
+    head.appendChild(favicon);
+    
+    // Meta tags
+    const metaCharset = document.createElement('meta');
+    metaCharset.setAttribute('http-equiv', 'Content-type');
+    metaCharset.content = 'text/html; charset=utf-8';
+    head.appendChild(metaCharset);
+    
+    const metaViewport = document.createElement('meta');
+    metaViewport.name = 'viewport';
+    metaViewport.content = 'initial-scale=1.0001, minimum-scale=1.0001, maximum-scale=1.0001, user-scalable=no, minimal-ui';
+    head.appendChild(metaViewport);
+    
+    const metaWebApp = document.createElement('meta');
+    metaWebApp.name = 'apple-mobile-web-app-capable';
+    metaWebApp.content = 'yes';
+    head.appendChild(metaWebApp);
+    
+    // Load CSS dynamically
+    const cssLink = document.createElement('link');
+    cssLink.rel = 'stylesheet';
+    cssLink.type = 'text/css';
+    cssLink.href = 'https://cdn.jsdelivr.net/gh/dartsc/drift-boss@main/game.css';
+    head.appendChild(cssLink);
+    
+    // Create body and main game structure
+    document.body.onload = function() {
+        setTimeout(function(){window.scrollTo(0,1)}, 1);
+    };
+    
+    // Main container
+    const ajaxbar = document.createElement('div');
+    ajaxbar.id = 'ajaxbar';
+    document.body.appendChild(ajaxbar);
+    
+    // Game canvas container
+    const gameDiv = document.createElement('div');
+    gameDiv.id = 'game';
+    const canvas = document.createElement('canvas');
+    canvas.id = 'canvas';
+    gameDiv.appendChild(canvas);
+    ajaxbar.appendChild(gameDiv);
+    
+    // WebGL canvas container
+    const webglDiv = document.createElement('div');
+    webglDiv.id = 'webgl';
+    const webglCanvas = document.createElement('canvas');
+    webglCanvas.id = 'webglcanvas';
+    webglDiv.appendChild(webglCanvas);
+    ajaxbar.appendChild(webglDiv);
+    
+    // Orientation div
+    const orientateDiv = document.createElement('div');
+    orientateDiv.id = 'orientate';
+    const orientateImg = document.createElement('img');
+    orientateImg.src = 'https://cdn.jsdelivr.net/gh/dartsc/drift-boss@main/media/graphics/orientate/landscape.jpg';
+    orientateDiv.appendChild(orientateImg);
+    ajaxbar.appendChild(orientateDiv);
+    
+    // Play button div
+    const playDiv = document.createElement('div');
+    playDiv.id = 'play';
+    playDiv.className = 'play';
+    playDiv.onclick = function() {};
+    const playImg = document.createElement('img');
+    playImg.src = 'https://cdn.jsdelivr.net/gh/dartsc/drift-boss@main/media/graphics/splash/mobile/cover-start.jpg';
+    playDiv.appendChild(playImg);
+    ajaxbar.appendChild(playDiv);
+    
+    // Create all the ad containers dynamically
+    createAdContainer('MobileAdInGamePreroll', 'https://cdn.jsdelivr.net/gh/dartsc/drift-boss@main/branding/logo.png');
+    createAdContainer('MobileAdInGamePreroll2');
+    createAdContainer('MobileAdInGamePreroll3');
+    
+    // Header ad containers
+    ['MobileAdInGameHeader', 'MobileAdInGameHeader2', 'MobileAdInGameHeader3'].forEach(id => {
+        const div = document.createElement('div');
+        div.id = id;
+        ajaxbar.appendChild(div);
+    });
+    
+    // Footer ad containers
+    ['MobileAdInGameFooter', 'MobileAdInGameFooter2', 'MobileAdInGameFooter3'].forEach(id => {
+        const div = document.createElement('div');
+        div.id = id;
+        ajaxbar.appendChild(div);
+    });
+    
+    // End game ad containers
+    createAdContainer('MobileAdInGameEnd');
+    createAdContainer('MobileAdInGameEnd2');
+    createAdContainer('MobileAdInGameEnd3');
+    
+    // Handle fullscreen
+    if (Fullscreen) {
+        enableFullscreen();
+    }
+    
+    // Load the game JavaScript
+    loadGameScript();
+    
+    function createAdContainer(id, logoSrc = null) {
+        const container = document.createElement('div');
+        container.id = id;
+        
+        const box = document.createElement('div');
+        box.id = id + '-Box';
+        container.appendChild(box);
+        
+        const header = document.createElement('div');
+        header.id = id + '-Box-Header';
+        box.appendChild(header);
+        
+        const close = document.createElement('a');
+        close.id = id + '-Box-Close';
+        close.onclick = function() {
+            if (id.includes('Preroll')) {
+                if (typeof MobileAdInGamePreroll !== 'undefined' && MobileAdInGamePreroll.Close) {
+                    MobileAdInGamePreroll.Close();
+                }
+            } else if (id.includes('End')) {
+                if (typeof MobileAdInGameEnd !== 'undefined' && MobileAdInGameEnd.Close) {
+                    MobileAdInGameEnd.Close();
+                }
+            }
+        };
+        box.appendChild(close);
+        
+        const body = document.createElement('div');
+        body.id = id + '-Box-Body';
+        const center = document.createElement('center');
+        
+        if (logoSrc) {
+            const img = document.createElement('img');
+            img.src = logoSrc;
+            center.appendChild(img);
+        }
+        
+        body.appendChild(center);
+        box.appendChild(body);
+        
+        const footer = document.createElement('div');
+        footer.id = id + '-Box-Footer';
+        box.appendChild(footer);
+        
+        ajaxbar.appendChild(container);
+    }
+    
+    function enableFullscreen() {
+        const style = document.createElement('style');
+        style.textContent = `
+            html, body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+            #ajaxbar {
+                width: 100vw;
+                height: 100vh;
+            }
+            #canvas, #webglcanvas {
+                width: 100% !important;
+                height: 100% !important;
+                display: block;
+            }
+            #game, #webgl {
+                width: 100%;
+                height: 100%;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Handle resize events
+        window.addEventListener('resize', function() {
+            const canvas = document.getElementById('canvas');
+            const webglCanvas = document.getElementById('webglcanvas');
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            if (webglCanvas) {
+                webglCanvas.width = window.innerWidth;
+                webglCanvas.height = window.innerHeight;
+            }
+        });
+        
+        // Initial resize
+        setTimeout(function() {
+            window.dispatchEvent(new Event('resize'));
+        }, 100);
+    }
+    
+    function loadGameScript() {
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = 'https://cdn.jsdelivr.net/gh/dartsc/drift-boss@main/game.js';
+        script.onerror = function() {
+            console.error('Failed to load game script');
+        };
+        script.onload = function() {
+            console.log('Game script loaded successfully');
+        };
+        document.head.appendChild(script);
+    }
+});
+</script>
+</html>
