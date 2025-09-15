@@ -1,6 +1,8 @@
 <script>
 // Configuration
 const Fullscreen = true;
+// Use your repo on jsDelivr
+const CDN_BASE = 'https://cdn.jsdelivr.net/gh/dartsc/drift-boss-WEBFIX@main';
 
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -26,11 +28,54 @@ document.addEventListener('DOMContentLoaded', function() {
     metaWebApp.content = 'yes';
     head.appendChild(metaWebApp);
     
+    // Global URL rewrite shim: redirect any lingering drift-boss@main URLs to WEBFIX
+    (function installCdnRewriteShim(){
+        const OLD = 'https://cdn.jsdelivr.net/gh/dartsc/drift-boss@main';
+        const NEW = CDN_BASE;
+        const rewrite = (url) => {
+            if (typeof url === 'string' && url.indexOf(OLD) === 0) return NEW + url.substring(OLD.length);
+            return url;
+        };
+        // Intercept HTMLImageElement src
+        const imgDesc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+        if (imgDesc && imgDesc.set) {
+            const orig = imgDesc.set;
+            Object.defineProperty(HTMLImageElement.prototype, 'src', {
+                set(v){ orig.call(this, rewrite(v)); },
+                get(){ return imgDesc.get.call(this); }
+            });
+        }
+        // Intercept Audio constructor and src assignments
+        const _Audio = window.Audio;
+        window.Audio = function(url){ return new _Audio(rewrite(url)); };
+        if (_Audio && _Audio.prototype) {
+            const aDesc = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'src');
+            if (aDesc && aDesc.set) {
+                const origSet = aDesc.set, origGet = aDesc.get;
+                Object.defineProperty(HTMLMediaElement.prototype, 'src', {
+                    set(v){ origSet.call(this, rewrite(v)); },
+                    get(){ return origGet.call(this); }
+                });
+            }
+        }
+        // Intercept fetch and XHR
+        const origFetch = window.fetch;
+        window.fetch = function(input, init){
+            if (typeof input === 'string') input = rewrite(input);
+            else if (input && input.url) { input = new Request(rewrite(input.url), input); }
+            return origFetch.call(this, input, init);
+        };
+        const origOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function(method, url, async, user, pass){
+            return origOpen.call(this, method, rewrite(url), async, user, pass);
+        };
+    })();
+
     // Load CSS dynamically
     const cssLink = document.createElement('link');
     cssLink.rel = 'stylesheet';
     cssLink.type = 'text/css';
-    cssLink.href = 'https://cdn.jsdelivr.net/gh/dartsc/drift-boss@main/game.css';
+    cssLink.href = CDN_BASE + '/game.css';
     head.appendChild(cssLink);
     
     // Create body and main game structure
@@ -63,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const orientateDiv = document.createElement('div');
     orientateDiv.id = 'orientate';
     const orientateImg = document.createElement('img');
-    orientateImg.src = 'https://cdn.jsdelivr.net/gh/dartsc/drift-boss@main/media/graphics/orientate/landscape.jpg';
+    orientateImg.src = CDN_BASE + '/media/graphics/orientate/landscape.jpg';
     orientateDiv.appendChild(orientateImg);
     ajaxbar.appendChild(orientateDiv);
     
@@ -73,12 +118,12 @@ document.addEventListener('DOMContentLoaded', function() {
     playDiv.className = 'play';
     playDiv.onclick = function() {};
     const playImg = document.createElement('img');
-    playImg.src = 'https://cdn.jsdelivr.net/gh/dartsc/drift-boss@main/media/graphics/splash/mobile/cover-start.jpg';
+    playImg.src = CDN_BASE + '/media/graphics/splash/mobile/cover-start.jpg';
     playDiv.appendChild(playImg);
     ajaxbar.appendChild(playDiv);
     
     // Create all the ad containers dynamically
-    createAdContainer('MobileAdInGamePreroll', 'https://cdn.jsdelivr.net/gh/dartsc/drift-boss@main/branding/logo.png');
+    createAdContainer('MobileAdInGamePreroll', CDN_BASE + '/branding/logo.png');
     createAdContainer('MobileAdInGamePreroll2');
     createAdContainer('MobileAdInGamePreroll3');
     
@@ -205,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function loadGameScript() {
         const script = document.createElement('script');
         script.type = 'text/javascript';
-        script.src = 'https://cdn.jsdelivr.net/gh/dartsc/drift-boss@main/game.js';
+        script.src = CDN_BASE + '/game.js';
         script.onerror = function() {
             console.error('Failed to load game script');
         };
